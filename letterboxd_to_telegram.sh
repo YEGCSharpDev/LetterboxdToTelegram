@@ -7,7 +7,7 @@
 # export ERROR_TELEGRAM_CHAT_ID="your_error_telegram_chat_id"
 # Add these to ~/.bashrc and run: source ~/.bashrc
 # add cron job by going to crontab -e
-# */15 * * * * script_path.sh
+# 0 */8 * * *  script_path.sh
 
 
 NOW_SEC=$(date -u +%s)
@@ -35,8 +35,8 @@ minutes_to_hours_minutes() {
       PUBDATE=$(echo "$ITEM" | grep -oPm1 "(?<=<pubDate>)[^<]+")
       PUBDATE_SEC=$(date -d "$PUBDATE" +%s 2>/dev/null)
       if [[ -z "$PUBDATE_SEC" ]]; then continue; fi
-      # Check for last 15 minutes (900 seconds)
-      if [ $((NOW_SEC - PUBDATE_SEC)) -le 900 ]; then
+      # Check for last 8 hours (8*60*60 seconds)
+      if [ $((NOW_SEC - PUBDATE_SEC)) -le 28800 ]; then
           TMDBID=$(echo "$ITEM" | grep -oPm1 "(?<=<tmdb:movieId>)[^<]+")
           TITLE=$(echo "$ITEM" | grep -oPm1 "(?<=<letterboxd:filmTitle>)[^<]+")
           RATING=$(echo "$ITEM" | grep -oPm1 "(?<=<letterboxd:memberRating>)[^<]+")
