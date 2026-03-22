@@ -43,7 +43,10 @@ public class TmdbMappingTests
             ],
             ""original_language"": ""en"",
             ""overview"": ""A ticking-time-bomb insomniac and a slippery soap salesman channel primal male aggression into a shocking new form of therapy. Their concept catches on, with 'fight clubs' forming in every town, until an eccentric gets in the way and ignites an out-of-control spiral toward oblivion."",
-            ""vote_average"": 8.433
+            ""vote_average"": 8.433,
+            ""release_date"": ""1999-10-15"",
+            ""runtime"": 139,
+            ""imdb_id"": ""tt0137523""
         }";
 
         var response = JsonSerializer.Deserialize<TmdbMovieDetails>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
@@ -52,5 +55,8 @@ public class TmdbMappingTests
         Assert.Single(response.Genres);
         Assert.Equal("Drama", response.Genres[0].Name);
         Assert.Equal("en", response.OriginalLanguage);
+        Assert.Equal("1999-10-15", response.ReleaseDate);
+        Assert.Equal(139, response.Runtime);
+        Assert.Equal("tt0137523", response.ImdbId);
     }
 }

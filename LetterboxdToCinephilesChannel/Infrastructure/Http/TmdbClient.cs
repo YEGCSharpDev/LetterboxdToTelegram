@@ -60,6 +60,15 @@ public class TmdbMovieDetails
     
     [JsonPropertyName("vote_average")]
     public double VoteAverage { get; set; }
+
+    [JsonPropertyName("release_date")]
+    public string ReleaseDate { get; set; } = string.Empty;
+
+    [JsonPropertyName("runtime")]
+    public int? Runtime { get; set; }
+
+    [JsonPropertyName("imdb_id")]
+    public string ImdbId { get; set; } = string.Empty;
 }
 
 public class TmdbGenre

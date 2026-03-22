@@ -22,12 +22,18 @@ public class TelegramService(ITelegramBotClient botClient, IOptions<TelegramOpti
             var caption = BuildHtmlCaption(rssItem, tmdbDetails);
             
             var buttons = new List<InlineKeyboardButton>();
-            buttons.Add(InlineKeyboardButton.WithUrl("Letterboxd", rssItem.Link));
             
-            if (!string.IsNullOrEmpty(rssItem.ImdbId))
+            var imdbId = !string.IsNullOrEmpty(rssItem.ImdbId) ? rssItem.ImdbId : tmdbDetails?.ImdbId;
+            if (!string.IsNullOrEmpty(imdbId))
             {
-                buttons.Add(InlineKeyboardButton.WithUrl("IMDb", $"https://www.imdb.com/title/{rssItem.ImdbId}"));
+                buttons.Add(InlineKeyboardButton.WithUrl("IMDb", $"https://www.imdb.com/title/{imdbId}"));
             }
+            else if (tmdbDetails != null)
+            {
+                buttons.Add(InlineKeyboardButton.WithUrl("TMDB", $"https://www.themoviedb.org/movie/{tmdbDetails.Id}"));
+            }
+
+            buttons.Add(InlineKeyboardButton.WithUrl("Letterboxd", rssItem.Link));
 
             var inlineKeyboard = new InlineKeyboardMarkup(buttons);
 
@@ -64,8 +70,27 @@ public class TelegramService(ITelegramBotClient botClient, IOptions<TelegramOpti
     {
         var sb = new StringBuilder();
 
+        var imdbId = !string.IsNullOrEmpty(rssItem.ImdbId) ? rssItem.ImdbId : tmdbDetails?.ImdbId;
+        var movieUrl = !string.IsNullOrEmpty(imdbId) 
+            ? $"https://www.imdb.com/title/{imdbId}" 
+            : tmdbDetails != null 
+                ? $"https://www.themoviedb.org/movie/{tmdbDetails.Id}"
+                : rssItem.Link;
+
         // <b>Title (Year)</b>
-        sb.AppendLine($"<b>{WebUtility.HtmlEncode(rssItem.FilmTitle)} ({rssItem.FilmYear})</b>");
+        sb.AppendLine($"<a href=\"{movieUrl}\"><b>{WebUtility.HtmlEncode(rssItem.FilmTitle)} ({rssItem.FilmYear})</b></a>");
+
+        // Release Date
+        if (!string.IsNullOrEmpty(tmdbDetails?.ReleaseDate))
+        {
+            sb.AppendLine($"📅 <b>Release Date:</b> {tmdbDetails.ReleaseDate}");
+        }
+
+        // Runtime
+        if (tmdbDetails?.Runtime > 0)
+        {
+            sb.AppendLine($"⏱ <b>Runtime:</b> {tmdbDetails.Runtime} min");
+        }
 
         // Ratings & Liked
         var ratings = new List<string>();
