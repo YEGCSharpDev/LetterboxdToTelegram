@@ -4,12 +4,10 @@
 
 ## Phase 1: Foundation & Modernization
 **Goal:** Establish the .NET 10 Worker Service foundation with resilient integrations and portable persistence.
-**Plans:** 3 plans
+**Plans:** 1 plan
 
 Plans:
-- [ ] 01-01-PLAN.md — Project Foundation & Configuration (Worker SDK, Options, Logging)
-- [ ] 01-02-PLAN.md — Persistence & Data Access (EF Core, SQLite, WAL, Migrations)
-- [ ] 01-03-PLAN.md — Integrations & Seeding (Typed Clients, Resilience, History Seeding)
+- [x] .planning/phases/01-foundation/01-01-PLAN.md — Foundation & Modernization (Worker SDK, EF Core, Resilience, Seeding)
 
 - [x] Initialize .NET 10 Worker Service project.
 - [x] Configure `IHttpClientFactory` and Typed Clients (OMDb, RSS, Telegram).
@@ -18,13 +16,18 @@ Plans:
 - [x] Set up basic logging and configuration (Env Vars).
 
 ## Phase 2: Core Logic & Integration
-- [ ] Implement robust RSS Fetcher and Parser (Handle XML/HTML nuances).
-- [ ] Implement OMDb Enrichment Client with Polly resilience.
+**Goal:** Implement robust RSS parsing, OMDb enrichment, and Telegram delivery within a 10-minute polling loop.
+**Plans:** 1 plan
+
+Plans:
+- [ ] .planning/phase2/PLAN.md — Core processing engine (RSS, OMDb, Telegram, Worker)
+
+- [ ] Implement robust RSS Fetcher and Parser (Handle XML/HTML nuances, whitespace, high-res posters).
+- [ ] Implement OMDb Enrichment Client with Polly resilience and 'N/A' handling.
 - [ ] Implement Telegram Bot Client with HTML-rich cards and interactive buttons.
-- [ ] Implement multi-item processing loop in `BackgroundService`.
+- [ ] Implement multi-item processing loop in `BackgroundService` with PeriodicTimer.
 
 ## Phase 3: Refinement & Reliability
-- [ ] Implement poster resolution enhancement logic.
 - [ ] Implement plot truncation and robust escaping for Telegram.
 - [ ] Add unit tests for RSS parsing and OMDb mapping.
 - [ ] Finalize Dockerfile and deployment documentation.
