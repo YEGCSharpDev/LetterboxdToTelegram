@@ -7,11 +7,13 @@ services:
       - ./data:/app/data
     environment:
       - ConnectionStrings__Default=Data Source=/app/data/movies.db
-      - Rss__Url=YOUR_LETTERBOXD_RSS_URL
+      - Rss__FeedUrl=YOUR_LETTERBOXD_RSS_URL
       - Tmdb__ReadAccessToken=YOUR_TMDB_ACCESS_TOKEN
       - Telegram__BotToken=YOUR_TELEGRAM_BOT_TOKEN
       - Telegram__ChannelId=YOUR_TELEGRAM_CHANNEL_ID
-      - ERROR_TELEGRAM_CHAT_ID=YOUR_ERROR_CHAT_ID
+      - Telegram__ErrorChatId=YOUR_ERROR_CHAT_ID
+      - Telegram__ApiId=0
+      - Telegram__ApiHash=YOUR_TELEGRAM_API_HASH
       - WORKER__POLLINGINTERVALMINUTES=10
     healthcheck:
       test: ["CMD", "cat", "/tmp/healthy"]
