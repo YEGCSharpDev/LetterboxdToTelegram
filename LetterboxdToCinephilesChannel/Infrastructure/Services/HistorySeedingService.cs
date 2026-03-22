@@ -47,10 +47,12 @@ public class HistorySeedingService
         try
         {
             await client.LoginBotIfNeeded();
-            IObject? resolved = null;
+            
+            InputPeer? peer = null;
             if (_options.ChannelId.StartsWith("@"))
             {
-                resolved = await client.Contacts_ResolveUsername(_options.ChannelId.Substring(1));
+                var resolved = await client.Contacts_ResolveUsername(_options.ChannelId.Substring(1));
+                if (resolved.Chat is Channel c) peer = c;
             }
             else
             {
@@ -60,28 +62,20 @@ public class HistorySeedingService
 
                 if (long.TryParse(idStr, out long id))
                 {
-                    // Use Messages_GetChats which is allowed for bots to get specific chats by ID
-                    var chats = await client.Messages_GetChats(id);
-                    resolved = chats.chats.Values.FirstOrDefault(c => c.ID == id);
+                    // For bots, we can try to use the ID directly as a PeerChannel
+                    // Note: This usually works if the bot is already a member and the peer is in its cache
+                    peer = new InputPeerChannel(id, 0); 
                 }
                 else
                 {
-                    // Try resolving as username without @
-                    resolved = await client.Contacts_ResolveUsername(_options.ChannelId);
+                    var resolved = await client.Contacts_ResolveUsername(_options.ChannelId);
+                    if (resolved.Chat is Channel c) peer = c;
                 }
             }
 
-
-            Channel? channel = resolved switch
+            if (peer == null)
             {
-                Contacts_ResolvedPeer rp => rp.Chat as Channel,
-                Channel c => c,
-                _ => null
-            };
-
-            if (channel == null)
-            {
-                _logger.LogError("Could not resolve channel {ChannelId}", _options.ChannelId);
+                _logger.LogError("Could not resolve channel peer for {ChannelId}", _options.ChannelId);
                 return;
             }
 
@@ -92,7 +86,8 @@ public class HistorySeedingService
 
             while (!ct.IsCancellationRequested)
             {
-                var history = await client.Messages_GetHistory(channel, offset_id: offsetId, limit: 100);
+                // Messages_GetHistory accepts InputPeer directly
+                var history = await client.Messages_GetHistory(peer, offset_id: offsetId, limit: 100);
                 if (history is not Messages_ChannelMessages channelMsgs || channelMsgs.messages.Length == 0)
                     break;
 
