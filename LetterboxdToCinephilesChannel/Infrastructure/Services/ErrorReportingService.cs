@@ -11,6 +11,12 @@ public class ErrorReportingService(ITelegramBotClient botClient, IOptions<Telegr
 
     public async Task ReportErrorAsync(string message, Exception? ex = null, CancellationToken ct = default)
     {
+        if (string.IsNullOrEmpty(_options.ErrorChatId))
+        {
+            logger.LogWarning("No ErrorChatId configured, skipping error reporting.");
+            return;
+        }
+
         try
         {
             var fullMessage = $"❌ <b>Critical Error</b>\n\n{message}";

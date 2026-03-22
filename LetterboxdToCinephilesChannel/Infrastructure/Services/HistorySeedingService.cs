@@ -33,6 +33,12 @@ public class HistorySeedingService
             return;
         }
 
+        if (_options.ApiId == 0 || string.IsNullOrEmpty(_options.ApiHash))
+        {
+            _logger.LogWarning("Telegram ApiId or ApiHash not configured. Skipping history seeding.");
+            return;
+        }
+
         _logger.LogInformation("Starting history seeding from Telegram...");
 
         using var client = new Client(config => config switch
