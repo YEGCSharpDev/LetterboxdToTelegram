@@ -87,6 +87,7 @@ public class HistorySeedingService
 
             int offsetId = 0;
             int totalProcessed = 0;
+            var processedLetterboxdIds = new HashSet<string>();
 
             while (!ct.IsCancellationRequested)
             {
@@ -99,9 +100,10 @@ public class HistorySeedingService
                     if (msgBase is Message msg && !string.IsNullOrEmpty(msg.message))
                     {
                         var movie = ParseMessage(msg);
-                        if (movie != null)
+                        if (movie != null && !processedLetterboxdIds.Contains(movie.LetterboxdId))
                         {
                             _dbContext.ProcessedMovies.Add(movie);
+                            processedLetterboxdIds.Add(movie.LetterboxdId);
                             totalProcessed++;
                         }
                     }
