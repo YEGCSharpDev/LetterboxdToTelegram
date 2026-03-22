@@ -131,6 +131,9 @@ public class Worker(
 
                     await db.SaveChangesAsync(stoppingToken);
                     logger.LogInformation("Successfully processed and saved: {Title}", item.FilmTitle);
+
+                    // Add a small delay between items to avoid Telegram rate limiting
+                    await Task.Delay(2000, stoppingToken);
                 }
             }
         }

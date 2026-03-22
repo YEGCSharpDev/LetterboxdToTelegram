@@ -53,9 +53,32 @@ public class HistorySeedingService
         {
             await client.LoginBotIfNeeded();
             
-            // Resolve channel
-            var resolved = await client.Contacts_ResolveUsername(_options.ChannelId.Replace("@", ""));
-            if (resolved.Chat is not Channel channel)
+            IObject? resolved = null;
+            if (_options.ChannelId.StartsWith("@"))
+            {
+                resolved = await client.Contacts_ResolveUsername(_options.ChannelId.Substring(1));
+            }
+            else if (long.TryParse(_options.ChannelId, out long id) || 
+                     (_options.ChannelId.StartsWith("-100") && long.TryParse(_options.ChannelId.Substring(4), out id)))
+            {
+                // For numeric IDs, we need to find the chat in the dialogs/chats to get the access_hash
+                var chats = await client.Messages_GetAllChats();
+                resolved = chats.chats.Values.FirstOrDefault(c => c.ID == id);
+            }
+            else
+            {
+                // Try resolving as username without @
+                resolved = await client.Contacts_ResolveUsername(_options.ChannelId);
+            }
+
+            Channel? channel = resolved switch
+            {
+                Contacts_ResolvedPeer rp => rp.Chat as Channel,
+                Channel c => c,
+                _ => null
+            };
+
+            if (channel == null)
             {
                 _logger.LogError("Could not resolve channel {ChannelId}", _options.ChannelId);
                 return;

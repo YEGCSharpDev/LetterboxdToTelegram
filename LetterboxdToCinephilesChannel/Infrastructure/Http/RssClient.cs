@@ -7,7 +7,8 @@ namespace LetterboxdToCinephilesChannel.Infrastructure.Http;
 
 public class RssClient
 {
-    private static readonly XNamespace LbNamespace = "https://letterboxd.com/";
+    private static readonly XNamespace LbNamespace = "https://letterboxd.com";
+    private static readonly XNamespace TmdbNamespace = "https://themoviedb.org";
     private readonly HttpClient _httpClient;
     private readonly RssOptions _options;
 
@@ -45,8 +46,8 @@ public class RssClient
                     x.Element(LbNamespace + "filmYear")?.Value ?? string.Empty,
                     x.Element(LbNamespace + "memberRating")?.Value ?? string.Empty,
                     x.Element(LbNamespace + "imdbId")?.Value ?? string.Empty,
-                    x.Element(LbNamespace + "tmdbId")?.Value ?? string.Empty,
-                    x.Element(LbNamespace + "liked")?.Value ?? "No",
+                    x.Element(TmdbNamespace + "movieId")?.Value ?? string.Empty,
+                    x.Element(LbNamespace + "memberLike")?.Value ?? "No",
                     highResPosterUrl,
                     x.Element("guid")?.Value ?? string.Empty
                 );
