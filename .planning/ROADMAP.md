@@ -3,10 +3,19 @@
 **Milestone: Architectural Overhaul & Feature Enrichment**
 
 ## Phase 1: Foundation & Modernization
-- [ ] Initialize .NET 8/9 Worker Service project.
-- [ ] Configure `IHttpClientFactory` and Typed Clients (OMDb, RSS, Telegram).
-- [ ] Implement EF Core with SQLite for portable persistence.
-- [ ] Set up basic logging and configuration (Env Vars).
+**Goal:** Establish the .NET 10 Worker Service foundation with resilient integrations and portable persistence.
+**Plans:** 3 plans
+
+Plans:
+- [ ] 01-01-PLAN.md — Project Foundation & Configuration (Worker SDK, Options, Logging)
+- [ ] 01-02-PLAN.md — Persistence & Data Access (EF Core, SQLite, WAL, Migrations)
+- [ ] 01-03-PLAN.md — Integrations & Seeding (Typed Clients, Resilience, History Seeding)
+
+- [x] Initialize .NET 10 Worker Service project.
+- [x] Configure `IHttpClientFactory` and Typed Clients (OMDb, RSS, Telegram).
+- [x] Implement EF Core with SQLite for portable persistence.
+- [x] Implement initial database seeding logic from Telegram history (MTProto/WTelegramClient).
+- [x] Set up basic logging and configuration (Env Vars).
 
 ## Phase 2: Core Logic & Integration
 - [ ] Implement robust RSS Fetcher and Parser (Handle XML/HTML nuances).
