@@ -47,23 +47,30 @@ public class HistorySeedingService
         try
         {
             await client.LoginBotIfNeeded();
-            
             IObject? resolved = null;
             if (_options.ChannelId.StartsWith("@"))
             {
                 resolved = await client.Contacts_ResolveUsername(_options.ChannelId.Substring(1));
             }
-            else if (long.TryParse(_options.ChannelId, out long id) || 
-                     (_options.ChannelId.StartsWith("-100") && long.TryParse(_options.ChannelId.Substring(4), out id)))
-            {
-                // Use Messages_GetChats which is allowed for bots to get specific chats by ID
-                var chats = await client.Messages_GetChats(id);
-                resolved = chats.chats.Values.FirstOrDefault(c => c.ID == id);
-            }
             else
             {
-                resolved = await client.Contacts_ResolveUsername(_options.ChannelId);
+                string idStr = _options.ChannelId;
+                if (idStr.StartsWith("-100")) idStr = idStr.Substring(4);
+                else if (idStr.StartsWith("-")) idStr = idStr.Substring(1);
+
+                if (long.TryParse(idStr, out long id))
+                {
+                    // Use Messages_GetChats which is allowed for bots to get specific chats by ID
+                    var chats = await client.Messages_GetChats(id);
+                    resolved = chats.chats.Values.FirstOrDefault(c => c.ID == id);
+                }
+                else
+                {
+                    // Try resolving as username without @
+                    resolved = await client.Contacts_ResolveUsername(_options.ChannelId);
+                }
             }
+
 
             Channel? channel = resolved switch
             {
