@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using LetterboxdToCinephilesChannel.Configuration;
 using LetterboxdToCinephilesChannel.Domain.Entities;
 using LetterboxdToCinephilesChannel.Infrastructure.Data;
@@ -127,46 +128,60 @@ public class HistorySeedingService
         // Example legacy message: 
         // 🎬 Movie Title (Year)
         // Letterboxd: https://letterboxd.com/film/movie-slug/
+        // IMDb: https://www.imdb.com/title/tt1234567/
         
-        var lines = msg.message.Split('\n');
+        var text = msg.message ?? string.Empty;
         string? letterboxdId = null;
+        string? imdbId = null;
         string? title = null;
         int? year = null;
 
+        // Extract Letterboxd ID
+        var lbMatch = Regex.Match(text, @"letterboxd\.com/film/([^/\s\n]+)");
+        if (lbMatch.Success)
+        {
+            letterboxdId = lbMatch.Groups[1].Value.Trim();
+        }
+
+        // Extract IMDb ID (tt followed by 7-8 digits)
+        var imdbMatch = Regex.Match(text, @"(tt\d{7,})");
+        if (imdbMatch.Success)
+        {
+            imdbId = imdbMatch.Groups[1].Value.Trim();
+        }
+
+        // Extract Title and Year from line with emoji
+        var lines = text.Split('\n');
         foreach (var line in lines)
         {
-            if (line.Contains("letterboxd.com/film/"))
+            if (line.Contains("🎬") || line.Contains("🎬"))
             {
-                var parts = line.Split('/');
-                // Example: https://letterboxd.com/film/movie-slug/
-                // parts might be ["https:", "", "letterboxd.com", "film", "movie-slug", ""]
-                var filmIndex = Array.IndexOf(parts, "film");
-                if (filmIndex >= 0 && parts.Length > filmIndex + 1)
+                var cleanLine = line.Replace("🎬", "").Trim();
+                if (cleanLine.Contains("(") && cleanLine.EndsWith(")"))
                 {
-                    letterboxdId = parts[filmIndex + 1].Trim();
-                }
-            }
-            else if (line.Contains("🎬"))
-            {
-                title = line.Replace("🎬", "").Trim();
-                if (title.Contains("(") && title.EndsWith(")"))
-                {
-                    var lastOpenParen = title.LastIndexOf('(');
-                    var yearPart = title.Substring(lastOpenParen + 1).TrimEnd(')');
+                    var lastOpenParen = cleanLine.LastIndexOf('(');
+                    var yearPart = cleanLine.Substring(lastOpenParen + 1).TrimEnd(')');
                     if (int.TryParse(yearPart, out var y))
                     {
                         year = y;
-                        title = title.Substring(0, lastOpenParen).Trim();
+                        title = cleanLine.Substring(0, lastOpenParen).Trim();
                     }
+                }
+                else
+                {
+                    title = cleanLine;
                 }
             }
         }
 
-        if (string.IsNullOrEmpty(letterboxdId)) return null;
+        // If we found neither ID, we can't reliably deduplicate
+        if (string.IsNullOrEmpty(letterboxdId) && string.IsNullOrEmpty(imdbId)) return null;
 
         return new ProcessedMovie
         {
-            LetterboxdId = letterboxdId,
+            // If LetterboxdId is missing, use a placeholder based on ImdbId to satisfy DB requirement
+            LetterboxdId = letterboxdId ?? $"seeded-{imdbId}",
+            ImdbId = imdbId,
             Title = title ?? "Unknown",
             Year = year,
             TelegramMessageId = msg.ID,

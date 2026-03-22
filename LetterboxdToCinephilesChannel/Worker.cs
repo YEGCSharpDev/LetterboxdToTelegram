@@ -93,7 +93,11 @@ public class Worker(
             {
                 if (stoppingToken.IsCancellationRequested) break;
 
-                var isProcessed = await db.ProcessedMovies.AnyAsync(m => m.LetterboxdId == item.Guid, stoppingToken);
+                var isProcessed = await db.ProcessedMovies.AnyAsync(m => 
+                    m.LetterboxdId == item.Guid || 
+                    (!string.IsNullOrEmpty(m.ImdbId) && m.ImdbId == item.ImdbId), 
+                    stoppingToken);
+                
                 if (isProcessed) continue;
 
                 logger.LogInformation("Processing new item: {Title}", item.FilmTitle);
