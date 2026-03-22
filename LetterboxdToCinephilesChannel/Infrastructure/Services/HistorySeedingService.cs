@@ -1,0 +1,147 @@
+using LetterboxdToCinephilesChannel.Configuration;
+using LetterboxdToCinephilesChannel.Domain.Entities;
+using LetterboxdToCinephilesChannel.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using TL;
+using WTelegram;
+
+namespace LetterboxdToCinephilesChannel.Infrastructure.Services;
+
+public class HistorySeedingService
+{
+    private readonly AppDbContext _dbContext;
+    private readonly TelegramOptions _options;
+    private readonly ILogger<HistorySeedingService> _logger;
+
+    public HistorySeedingService(
+        AppDbContext dbContext,
+        IOptions<TelegramOptions> options,
+        ILogger<HistorySeedingService> logger)
+    {
+        _dbContext = dbContext;
+        _options = options.Value;
+        _logger = logger;
+    }
+
+    public async Task SeedAsync(CancellationToken ct = default)
+    {
+        if (await _dbContext.ProcessedMovies.AnyAsync(ct))
+        {
+            _logger.LogInformation("Database is not empty. Skipping history seeding.");
+            return;
+        }
+
+        _logger.LogInformation("Starting history seeding from Telegram...");
+
+        using var client = new Client(config => config switch
+        {
+            "api_id" => _options.ApiId.ToString(),
+            "api_hash" => _options.ApiHash,
+            "bot_token" => _options.BotToken,
+            _ => null
+        });
+
+        try
+        {
+            await client.LoginBotIfNeeded();
+            
+            // Resolve channel
+            var resolved = await client.Contacts_ResolveUsername(_options.ChannelId.Replace("@", ""));
+            if (resolved.Chat is not Channel channel)
+            {
+                _logger.LogError("Could not resolve channel {ChannelId}", _options.ChannelId);
+                return;
+            }
+
+            int offsetId = 0;
+            int totalProcessed = 0;
+
+            while (!ct.IsCancellationRequested)
+            {
+                var history = await client.Messages_GetHistory(channel, offset_id: offsetId, limit: 100);
+                if (history is not Messages_ChannelMessages channelMsgs || channelMsgs.messages.Length == 0)
+                    break;
+
+                foreach (var msgBase in channelMsgs.messages)
+                {
+                    if (msgBase is Message msg && !string.IsNullOrEmpty(msg.message))
+                    {
+                        var movie = ParseMessage(msg);
+                        if (movie != null)
+                        {
+                            _dbContext.ProcessedMovies.Add(movie);
+                            totalProcessed++;
+                        }
+                    }
+                    offsetId = msgBase.ID;
+                }
+
+                if (channelMsgs.messages.Length < 100)
+                    break;
+                
+                await Task.Delay(1000, ct); // Rate limiting
+            }
+
+            await _dbContext.SaveChangesAsync(ct);
+            _logger.LogInformation("Successfully seeded {Count} movies from history.", totalProcessed);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error during history seeding");
+        }
+    }
+
+    private ProcessedMovie? ParseMessage(Message msg)
+    {
+        // Example legacy message: 
+        // 🎬 Movie Title (Year)
+        // Letterboxd: https://letterboxd.com/film/movie-slug/
+        
+        var lines = msg.message.Split('\n');
+        string? letterboxdId = null;
+        string? title = null;
+        int? year = null;
+
+        foreach (var line in lines)
+        {
+            if (line.Contains("letterboxd.com/film/"))
+            {
+                var parts = line.Split('/');
+                // Example: https://letterboxd.com/film/movie-slug/
+                // parts might be ["https:", "", "letterboxd.com", "film", "movie-slug", ""]
+                var filmIndex = Array.IndexOf(parts, "film");
+                if (filmIndex >= 0 && parts.Length > filmIndex + 1)
+                {
+                    letterboxdId = parts[filmIndex + 1].Trim();
+                }
+            }
+            else if (line.Contains("🎬"))
+            {
+                title = line.Replace("🎬", "").Trim();
+                if (title.Contains("(") && title.EndsWith(")"))
+                {
+                    var lastOpenParen = title.LastIndexOf('(');
+                    var yearPart = title.Substring(lastOpenParen + 1).TrimEnd(')');
+                    if (int.TryParse(yearPart, out var y))
+                    {
+                        year = y;
+                        title = title.Substring(0, lastOpenParen).Trim();
+                    }
+                }
+            }
+        }
+
+        if (string.IsNullOrEmpty(letterboxdId)) return null;
+
+        return new ProcessedMovie
+        {
+            LetterboxdId = letterboxdId,
+            Title = title ?? "Unknown",
+            Year = year,
+            TelegramMessageId = msg.ID,
+            ProcessedAt = msg.date
+        };
+    }
+}

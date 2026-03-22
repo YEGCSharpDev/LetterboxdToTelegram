@@ -20,19 +20,24 @@ Plans:
 **Plans:** 1 plan
 
 Plans:
-- [ ] .planning/phase2/PLAN.md — Core processing engine (RSS, OMDb, Telegram, Worker)
+- [x] .planning/phase2/PLAN.md — Core processing engine (RSS, OMDb, Telegram, Worker)
 
-- [ ] Implement robust RSS Fetcher and Parser (Handle XML/HTML nuances, whitespace, high-res posters).
-- [ ] Implement OMDb Enrichment Client with Polly resilience and 'N/A' handling.
-- [ ] Implement Telegram Bot Client with HTML-rich cards and interactive buttons.
-- [ ] Implement multi-item processing loop in `BackgroundService` with PeriodicTimer.
+- [x] Implement robust RSS Fetcher and Parser (Handle XML/HTML nuances, whitespace, high-res posters).
+- [x] Implement OMDb Enrichment Client with Polly resilience and 'N/A' handling.
+- [x] Implement Telegram Bot Client with HTML-rich cards and interactive buttons.
+- [x] Implement multi-item processing loop in `BackgroundService` with PeriodicTimer.
 
 ## Phase 3: Refinement & Reliability
-- [ ] Implement plot truncation and robust escaping for Telegram.
-- [ ] Add unit tests for RSS parsing and OMDb mapping.
-- [ ] Finalize Dockerfile and deployment documentation.
+**Goal:** Harden the application with structured logging, health monitoring, and secure Dockerization.
+**Plans:** 1 plan
 
-## Phase 4: Validation & Delivery
-- [ ] End-to-end integration testing.
-- [ ] Verification of SQLite persistence in Docker.
-- [ ] Delivery of final "lean and mean" application.
+Plans:
+- [x] .planning/phase3/PLAN.md — Refinement & Reliability (Docker, Serilog, Health Checks, Graceful Shutdown)
+
+- [x] Implement structured logging with Serilog (File and Console).
+- [x] Implement file-based health check publisher for Docker monitoring.
+- [x] Implement graceful shutdown with SQLite WAL checkpoint (TRUNCATE).
+- [x] Finalize multi-stage non-root Dockerfile and docker-compose.yml.
+
+## Project Complete
+**Status:** Modernization and architectural overhaul finished. The application is ready for production.

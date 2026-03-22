@@ -2,7 +2,7 @@
   "project_name": "LetterboxdToTelegram",
   "workflow": "gsd-v1",
   "preferences": {
-    "tech_stack": ".NET 8/9",
+    "tech_stack": ".NET 10",
     "persistence": "SQLite (Portable)",
     "integrations": ["Telegram Bot API", "OMDB API", "Letterboxd RSS"]
   },
