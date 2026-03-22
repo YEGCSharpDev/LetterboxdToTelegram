@@ -56,7 +56,8 @@ public class HistorySeedingService
             else if (long.TryParse(_options.ChannelId, out long id) || 
                      (_options.ChannelId.StartsWith("-100") && long.TryParse(_options.ChannelId.Substring(4), out id)))
             {
-                var chats = await client.Messages_GetAllChats();
+                // Use Messages_GetChats which is allowed for bots to get specific chats by ID
+                var chats = await client.Messages_GetChats(id);
                 resolved = chats.chats.Values.FirstOrDefault(c => c.ID == id);
             }
             else
