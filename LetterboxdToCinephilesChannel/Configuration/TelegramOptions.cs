@@ -11,9 +11,4 @@ public class TelegramOptions
     public string ChannelId { get; set; } = string.Empty;
 
     public string? ErrorChatId { get; set; }
-
-    [Range(0, int.MaxValue)]
-    public int ApiId { get; set; }
-
-    public string? ApiHash { get; set; }
 }

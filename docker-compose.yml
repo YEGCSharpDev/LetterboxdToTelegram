@@ -12,8 +12,6 @@ services:
       - Telegram__BotToken=YOUR_TELEGRAM_BOT_TOKEN
       - Telegram__ChannelId=YOUR_TELEGRAM_CHANNEL_ID
       - Telegram__ErrorChatId=YOUR_ERROR_CHAT_ID
-      - Telegram__ApiId=0
-      - Telegram__ApiHash=YOUR_TELEGRAM_API_HASH
       - WORKER__POLLINGINTERVALMINUTES=10
     healthcheck:
       test: ["CMD", "cat", "/tmp/healthy"]
