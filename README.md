@@ -1,35 +1,50 @@
 # Letterboxd to Telegram Bot
 
 ## Overview
-
-This Telegram bot is designed to automatically post Letterboxd entries of specific members directly onto a Telegram channel. It simplifies the process of sharing movie reviews, ratings, and lists with the community on the designated Telegram channel named `cinephilesclubbbb`.
+A modern .NET 10 Worker Service that automatically posts Letterboxd entries from specified members to a Telegram channel. It enriches movie metadata using the TMDB API, provides rich HTML cards, and is fully containerized for easy deployment.
 
 ## Features
-
-- **Automatic Posting:** The bot fetches Letterboxd entries from specified members and posts them on the Telegram channel.
-  
-- **Customization:** Users can configure the bot to target specific Letterboxd members and customize the posting frequency.
+- **Modern Architecture**: Built with .NET 10 Worker SDK.
+- **Enriched Metadata**: High-quality movie posters and genre hashtags from TMDB.
+- **Rich Telegram Cards**: Professional HTML-formatted messages with interactive buttons.
+- **Resilient**: Polly-based retry policies for all external API calls.
+- **Deduplication**: Robust SQLite-backed tracking using Letterboxd and IMDb identifiers.
+- **Docker Ready**: Multi-stage, non-root Docker support with file-based health checks.
 
 ## Requirements
+- Docker and Docker Compose
+- Letterboxd RSS Feed URLs
+- TMDB API Access Token (v3)
+- Telegram Bot Token and Channel ID
 
-- .NET 8
-- Nuget packages
-  - HtmlAgilityPack : For parsing letterboxd RSS feed entries
-  - Microsoft.Data.Sqlite : For checkpointing data to ensure duplicate entries are not posted
-  - Microsoft.Data.Sqlite.Core : Same as above
-  - SQLite : Same as above
-  - Telegram.Bot : For posting to channel
-- Env Variables
-  - CHAT_ID : Chat ID of the channel where the message should be posted to
-  - CINEPHILE_TOKEN : Bot token of the telegram bot that will be posting the message
-  - RSS_URLS : Comma separated values of the RSS feeds from letterboxd profile pages
-  - USERNAME_CREATOR_MAPPING : Key:value pairs of custom usernames to sign messages with. (key is the letterboxd username, value is custom username)
+## Configuration
+The application is configured via environment variables (see `docker-compose.yml`):
+- `ConnectionStrings__Default`: SQLite connection string (e.g., `Data Source=/app/data/movies.db`).
+- `Rss__FeedUrl`: Your Letterboxd RSS feed URL.
+- `Tmdb__ReadAccessToken`: Your TMDB API read access token.
+- `Telegram__BotToken`: Your Telegram bot token.
+- `Telegram__ChannelId`: The target Telegram channel ID.
+- `Telegram__ErrorChatId`: Chat ID for error reporting.
+- `WORKER__POLLINGINTERVALMINUTES`: Polling interval in minutes (default: 10).
 
-## Setup
+## Deployment
 
 1. **Clone the Repository:**
    ```bash
-   git clone https://github.com/your-username/letterboxd-telegram-bot.git
-   cd letterboxd-telegram-bot
-2. **Set Environment Variables**
-3. **Run the exe**
+   git clone https://github.com/shnkrr/LetterboxdToTelegram.git
+   cd LetterboxdToTelegram
+   ```
+
+2. **Configure Environment:**
+   Edit the `docker-compose.yml` file with your specific API tokens and channel IDs.
+
+3. **Launch:**
+   ```bash
+   docker-compose up -d --build
+   ```
+
+## Development
+- **Framework**: .NET 10
+- **Database**: SQLite (EF Core with WAL mode)
+- **Logging**: Serilog (Structured JSON for console and files)
+- **Health Checks**: File-based check at `/tmp/healthy`
