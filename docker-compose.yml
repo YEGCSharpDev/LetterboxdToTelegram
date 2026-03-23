@@ -1,6 +1,6 @@
 services:
   app:
-    build: .
+    image: preface8675/cinephilechannelpush:latest
     container_name: letterboxd-to-telegram
     restart: unless-stopped
     volumes:

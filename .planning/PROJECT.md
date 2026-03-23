@@ -12,6 +12,12 @@ Current mapping: See `.planning/codebase/`
 - **Persistence**: Ensure portable SQLite database management for Docker environments.
 - **Integrations**: Formalize TMDB API usage (replacing OMDb) for enhanced movie metadata and implement Error Reporting via Telegram.
 
+## Milestones
+- **Milestone 1**: Architectural Overhaul & Modernization (Completed)
+- **Milestone 2**: CI/CD & Automated Image Distribution (In Progress)
+  - Goal: Automate the Docker build and push process to Docker Hub using GitHub Actions.
+  - Integration: Continuous deployment trigger on `main` branch.
+
 ## Workflow Configuration
 - **Standard**: GSD-v1
 - **Domain Research**: Required (Telegram/Letterboxd APIs)
