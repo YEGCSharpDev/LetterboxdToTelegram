@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -22,7 +22,7 @@ namespace LetterboxdToCinephilesChannel
         {
             int maxRetries = 3;
             int currentRetry = 0;
-            string apiKey = Environment.GetEnvironmentVariable("API_KEY");
+            string apiKey = Environment.GetEnvironmentVariable("API_KEY") ?? string.Empty;
             string apiURI = $"http://www.omdbapi.com/?apikey={apiKey}&t={Uri.EscapeDataString(movie.FilmTitle)}&y={movie.FilmYear}&r=JSON";
 
             using (HttpClient httpClient = new HttpClient())
@@ -139,92 +139,92 @@ namespace LetterboxdToCinephilesChannel
             /// <summary>
             /// Gets or sets the title of the movie.
             /// </summary>
-            public string Title { get; set; }
+            public string Title { get; set; } = string.Empty;
 
             /// <summary>
             /// Gets or sets the year of the movie's release.
             /// </summary>
-            public string Year { get; set; }
+            public string Year { get; set; } = string.Empty;
 
             /// <summary>
             /// Gets or sets the movie's rating (e.g., PG, R).
             /// </summary>
-            public string Rated { get; set; }
+            public string Rated { get; set; } = string.Empty;
 
             /// <summary>
             /// Gets or sets the movie's release date.
             /// </summary>
-            public string Released { get; set; }
+            public string Released { get; set; } = string.Empty;
 
             /// <summary>
             /// Gets or sets the movie's runtime.
             /// </summary>
-            public string Runtime { get; set; }
+            public string Runtime { get; set; } = string.Empty;
 
             /// <summary>
             /// Gets or sets the movie's genre(s).
             /// </summary>
-            public string Genre { get; set; }
+            public string Genre { get; set; } = string.Empty;
 
             /// <summary>
             /// Gets or sets the movie's director(s).
             /// </summary>
-            public string Director { get; set; }
+            public string Director { get; set; } = string.Empty;
 
             /// <summary>
             /// Gets or sets the movie's writer(s).
             /// </summary>
-            public string Writer { get; set; }
+            public string Writer { get; set; } = string.Empty;
 
             /// <summary>
             /// Gets or sets the movie's main actors.
             /// </summary>
-            public string Actors { get; set; }
+            public string Actors { get; set; } = string.Empty;
 
             /// <summary>
             /// Gets or sets the movie's plot summary.
             /// </summary>
-            public string Plot { get; set; }
+            public string Plot { get; set; } = string.Empty;
 
             /// <summary>
             /// Gets or sets the movie's language(s).
             /// </summary>
-            public string Language { get; set; }
+            public string Language { get; set; } = string.Empty;
 
             /// <summary>
             /// Gets or sets the movie's country of origin.
             /// </summary>
-            public string Country { get; set; }
+            public string Country { get; set; } = string.Empty;
 
             /// <summary>
             /// Gets or sets the awards received by the movie.
             /// </summary>
-            public string Awards { get; set; }
+            public string Awards { get; set; } = string.Empty;
 
             /// <summary>
             /// Gets or sets the URL of the movie's poster.
             /// </summary>
-            public string Poster { get; set; }
+            public string Poster { get; set; } = string.Empty;
 
             /// <summary>
             /// Gets or sets the movie's Metascore rating.
             /// </summary>
-            public string Metascore { get; set; }
+            public string Metascore { get; set; } = string.Empty;
 
             /// <summary>
             /// Gets or sets the movie's IMDb rating.
             /// </summary>
-            public string imdbRating { get; set; }
+            public string imdbRating { get; set; } = string.Empty;
 
             /// <summary>
             /// Gets or sets the number of IMDb votes for the movie.
             /// </summary>
-            public string imdbVotes { get; set; }
+            public string imdbVotes { get; set; } = string.Empty;
 
             /// <summary>
             /// Gets or sets the movie's IMDb ID.
             /// </summary>
-            public string imdbID { get; set; }
+            public string imdbID { get; set; } = string.Empty;
         }
     }
 }

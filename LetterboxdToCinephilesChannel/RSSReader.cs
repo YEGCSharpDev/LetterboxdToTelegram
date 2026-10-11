@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Xml;
 using System.Net;
@@ -26,14 +26,19 @@ namespace LetterboxdToCinephilesChannel
 
             while (true)
             {
-                string Token = Environment.GetEnvironmentVariable("CINEPHILE_TOKEN");
-                string ChatId = Environment.GetEnvironmentVariable("CHAT_ID");
-                string rss = Environment.GetEnvironmentVariable("RSS_URLS");
+                string? Token = Environment.GetEnvironmentVariable("CINEPHILE_TOKEN");
+                string? ChatId = Environment.GetEnvironmentVariable("CHAT_ID");
+                string? rss = Environment.GetEnvironmentVariable("RSS_URLS");
+                if (string.IsNullOrEmpty(rss))
+                {
+                    System.Threading.Thread.Sleep(10 * 60 * 1000);
+                    continue;
+                }
                 string[] urls = rss.Split(',');
 
                 foreach (string url in urls)
                 {
-                    string xmlContent = DownloadXmlContent(url);
+                    string? xmlContent = DownloadXmlContent(url);
                     if (xmlContent != null)
                     {
                         TextMessage parsedData = ParseXml(xmlContent);
@@ -42,7 +47,7 @@ namespace LetterboxdToCinephilesChannel
                         if (!EntryExists(textExtract) && !string.IsNullOrWhiteSpace(textExtract))
                         {
                             var movieInfo = movieinfo.GetInfoAsync(parsedData);
-                            calls.SendPhotoAsync(parsedData, movieInfo.Result);
+                            _ = calls.SendPhotoAsync(parsedData, movieInfo.Result);
                             InsertEntry(textExtract);
                             Console.WriteLine(textExtract);
                         }
@@ -112,14 +117,16 @@ namespace LetterboxdToCinephilesChannel
         /// </summary>
         /// <param name="url">The URL to download the XML from.</param>
         /// <returns>The downloaded XML content as a string, or null if an error occurs.</returns>
-        private static string DownloadXmlContent(string url)
+        private static string? DownloadXmlContent(string url)
         {
             try
             {
+#pragma warning disable SYSLIB0014
                 using (WebClient client = new WebClient())
                 {
                     return client.DownloadString(url);
                 }
+#pragma warning restore SYSLIB0014
             }
             catch (Exception ex)
             {
@@ -142,16 +149,18 @@ namespace LetterboxdToCinephilesChannel
             nsManager.AddNamespace("letterboxd", "https://letterboxd.com");
             nsManager.AddNamespace("tmdb", "https://themoviedb.org");
 
-            XmlNode latestItem = xmlDoc.SelectSingleNode("/rss/channel/item[1]");
+            XmlNode? latestItem = xmlDoc.SelectSingleNode("/rss/channel/item[1]");
             if (latestItem != null)
             {
-                message.FilmTitle = latestItem.SelectSingleNode(".//letterboxd:filmTitle", nsManager)?.InnerText;
-                message.FilmYear = latestItem.SelectSingleNode(".//letterboxd:filmYear", nsManager)?.InnerText;
-                message.MemberRating = string.IsNullOrEmpty(latestItem.SelectSingleNode(".//letterboxd:memberRating", nsManager)?.InnerText) ? string.Empty : latestItem.SelectSingleNode(".//letterboxd:memberRating", nsManager).InnerText;
+                message.FilmTitle = latestItem.SelectSingleNode(".//letterboxd:filmTitle", nsManager)?.InnerText ?? string.Empty;
+                message.FilmYear = latestItem.SelectSingleNode(".//letterboxd:filmYear", nsManager)?.InnerText ?? string.Empty;
+                var ratingNode = latestItem.SelectSingleNode(".//letterboxd:memberRating", nsManager);
+                message.MemberRating = string.IsNullOrEmpty(ratingNode?.InnerText) ? string.Empty : ratingNode.InnerText;
                 if (!string.IsNullOrWhiteSpace(message.MemberRating))
                     message.TotalRating = "5";
-                message.Creator = FindCreator(latestItem.LastChild.InnerText);
-                string description = latestItem.SelectSingleNode(".//description", nsManager)?.InnerText.Trim();
+                var lastNodeText = latestItem.LastChild?.InnerText ?? string.Empty;
+                message.Creator = FindCreator(lastNodeText);
+                string description = latestItem.SelectSingleNode(".//description", nsManager)?.InnerText.Trim() ?? string.Empty;
                 string descriptionHtml = WebUtility.HtmlDecode(description);
                 ExtractImgUrlAndComments(descriptionHtml, message);
             }
@@ -170,7 +179,7 @@ namespace LetterboxdToCinephilesChannel
             {
                 HtmlDocument doc = new HtmlDocument();
                 doc.LoadHtml(descriptionHtml);
-                message.ImgSrc = doc.DocumentNode.SelectSingleNode("//img")?.Attributes["src"]?.Value;
+                message.ImgSrc = doc.DocumentNode.SelectSingleNode("//img")?.Attributes["src"]?.Value ?? string.Empty;
 
                 var lastPNode = doc.DocumentNode.SelectSingleNode("//p[last()]");
                 if (lastPNode != null && !lastPNode.InnerText.Trim().StartsWith("Watched on", StringComparison.OrdinalIgnoreCase))
@@ -192,7 +201,7 @@ namespace LetterboxdToCinephilesChannel
         private static string FindCreator(string username)
         {
             string defaultCreator = "Who?";
-            string usernameMappingEnv = Environment.GetEnvironmentVariable("USERNAME_CREATOR_MAPPING");
+            string? usernameMappingEnv = Environment.GetEnvironmentVariable("USERNAME_CREATOR_MAPPING");
             Dictionary<string, string> usernameToCreatorMapping = new Dictionary<string, string>();
 
             if (!string.IsNullOrEmpty(usernameMappingEnv))

@@ -66,7 +66,7 @@ public class TelegramService(ITelegramBotClient botClient, IOptions<TelegramOpti
         }
     }
 
-    private string BuildHtmlCaption(RssItem rssItem, TmdbMovieDetails? tmdbDetails)
+    public string BuildHtmlCaption(RssItem rssItem, TmdbMovieDetails? tmdbDetails)
     {
         var sb = new StringBuilder();
 
@@ -128,18 +128,38 @@ public class TelegramService(ITelegramBotClient botClient, IOptions<TelegramOpti
             sb.AppendLine($"🌐 <b>Language:</b> {tmdbDetails.OriginalLanguage.ToUpper()}");
         }
 
+        // Review
+        if (!string.IsNullOrEmpty(rssItem.Review))
+        {
+            sb.AppendLine();
+            sb.AppendLine("💬 <b>Review:</b>");
+            sb.AppendLine($"<i>{TruncateHtmlEncoded(rssItem.Review, 380)}</i>");
+        }
+
         // Plot (truncated)
         var plot = tmdbDetails?.Overview ?? string.Empty;
         if (!string.IsNullOrEmpty(plot))
         {
-            if (plot.Length > 500)
-            {
-                plot = plot.Substring(0, 497) + "...";
-            }
+            var maxPlotLength = !string.IsNullOrEmpty(rssItem.Review) ? 200 : 500;
             sb.AppendLine();
-            sb.AppendLine($"<i>{WebUtility.HtmlEncode(plot)}</i>");
+            sb.AppendLine($"<i>{TruncateHtmlEncoded(plot, maxPlotLength)}</i>");
         }
 
         return sb.ToString();
+    }
+
+    public static string TruncateHtmlEncoded(string text, int maxLength)
+    {
+        var encoded = WebUtility.HtmlEncode(text);
+        if (encoded.Length <= maxLength) return encoded;
+
+        var truncated = encoded.Substring(0, maxLength - 3);
+        var lastAmp = truncated.LastIndexOf('&');
+        var lastSemi = truncated.LastIndexOf(';');
+        if (lastAmp != -1 && lastAmp > lastSemi)
+        {
+            truncated = truncated.Substring(0, lastAmp);
+        }
+        return truncated + "...";
     }
 }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -26,12 +26,12 @@ namespace LetterboxdToCinephilesChannel
         {
             try
             {
-                string Token = Environment.GetEnvironmentVariable("CINEPHILE_TOKEN");
-                string ChatId = Environment.GetEnvironmentVariable("CHAT_ID");
+                string? Token = Environment.GetEnvironmentVariable("CINEPHILE_TOKEN");
+                string? ChatId = Environment.GetEnvironmentVariable("CHAT_ID");
 
-                if (string.IsNullOrEmpty(Token))
+                if (string.IsNullOrEmpty(Token) || string.IsNullOrEmpty(ChatId))
                 {
-                    Console.WriteLine("Telegram bot token is missing. Set the TELEGRAM_BOT_TOKEN environment variable.");
+                    Console.WriteLine("Telegram bot token or ChatId is missing. Set environment variables.");
                     return;
                 }
 
