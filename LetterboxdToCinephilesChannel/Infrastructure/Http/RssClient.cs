@@ -1,5 +1,7 @@
+using System.Net;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
+using HtmlAgilityPack;
 using LetterboxdToCinephilesChannel.Configuration;
 using Microsoft.Extensions.Options;
 
@@ -33,6 +35,7 @@ public class RssClient
                 var description = x.Element("description")?.Value ?? string.Empty;
                 var posterUrl = ExtractPosterUrl(description);
                 var highResPosterUrl = UpgradePosterResolution(posterUrl);
+                var review = ExtractReview(description);
 
                 return new RssItem(
                     x.Element("title")?.Value ?? string.Empty,
@@ -49,7 +52,8 @@ public class RssClient
                     x.Element(TmdbNamespace + "movieId")?.Value ?? string.Empty,
                     x.Element(LbNamespace + "memberLike")?.Value ?? "No",
                     highResPosterUrl,
-                    x.Element("guid")?.Value ?? string.Empty
+                    x.Element("guid")?.Value ?? string.Empty,
+                    review
                 );
             })
             .ToList();
@@ -65,7 +69,54 @@ public class RssClient
     {
         if (string.IsNullOrEmpty(url)) return string.Empty;
         // Replace small dimensions with high resolution (1000x1500)
-        return url.Replace("0-230-0-345", "0-1000-0-1500");
+        return url.Replace("0-230-0-345", "0-1000-0-1500")
+                  .Replace("0-600-0-900", "0-1000-0-1500")
+                  .Replace("0-150-0-225", "0-1000-0-1500");
+    }
+
+    public static string ExtractReview(string? description)
+    {
+        if (string.IsNullOrWhiteSpace(description)) return string.Empty;
+
+        var doc = new HtmlDocument();
+        doc.LoadHtml(description);
+
+        var pNodes = doc.DocumentNode.SelectNodes("//p");
+        if (pNodes == null || pNodes.Count == 0) return string.Empty;
+
+        var reviewParagraphs = new List<string>();
+
+        foreach (var p in pNodes)
+        {
+            // Skip poster paragraph (contains <img>)
+            if (p.SelectSingleNode(".//img") != null) continue;
+
+            // Replace <br> tags with newlines
+            var brNodes = p.SelectNodes(".//br");
+            if (brNodes != null)
+            {
+                foreach (var br in brNodes)
+                {
+                    br.ParentNode.ReplaceChild(doc.CreateTextNode("\n"), br);
+                }
+            }
+
+            var text = WebUtility.HtmlDecode(p.InnerText).Trim();
+            if (string.IsNullOrEmpty(text)) continue;
+
+            // Skip "Watched on ..." watch date paragraphs
+            if (text.StartsWith("Watched on ", StringComparison.OrdinalIgnoreCase)) continue;
+
+            if (text.Equals("This review may contain spoilers.", StringComparison.OrdinalIgnoreCase))
+            {
+                reviewParagraphs.Add("⚠️ " + text);
+                continue;
+            }
+
+            reviewParagraphs.Add(text);
+        }
+
+        return string.Join("\n\n", reviewParagraphs).Trim();
     }
 }
 
@@ -84,5 +135,6 @@ public record RssItem(
     string TmdbId,
     string Liked,
     string PosterUrl,
-    string Guid
+    string Guid,
+    string Review = ""
 );
